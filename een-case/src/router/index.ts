@@ -1,5 +1,7 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 import HomeView from "../views/HomeView.vue";
+import CameraListView from "@/views/CameraList.vue";
+import LoginView from "@/views/Login.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -18,6 +20,13 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: "/camera-list",
+    name: "CameraList",
+    component: CameraListView,
+  },
+  {
+    path: "/login",
+    name: "Login",
+    component: LoginView,
   },
 ];
 
