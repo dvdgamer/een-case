@@ -16,6 +16,9 @@ const routes: Array<RouteRecordRaw> = [
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
   },
+  {
+    path: "/camera-list",
+  },
 ];
 
 const router = createRouter({
