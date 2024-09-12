@@ -1,0 +1,27 @@
+[33mcommit e6ea50b983a4ab750793a5a2fa1473eefe75750f[m[33m ([m[1;36mHEAD -> [m[1;32mdevelopment[m[33m, [m[1;31morigin/development[m[33m)[m
+Author: dvdgamer <davidnmponte@gmail.com>
+Date:   Wed Sep 11 22:02:24 2024 +0200
+
+    Added login API logic
+    Added routes for Camera List and Login pages
+    Created llogin page
+    Created testign for the login page
+
+[33mcommit 5508d85a1fdb04bece1bf6801032b6ed88e61ea8[m
+Author: dvdgamer <davidnmponte@gmail.com>
+Date:   Wed Sep 11 13:05:20 2024 +0200
+
+    created views,
+    chore: add routes and state control
+
+[33mcommit a98f22043910092c4be5627ff54bba778c261d37[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: dvdgamer <davidnmponte@gmail.com>
+Date:   Wed Sep 11 10:38:26 2024 +0200
+
+    created project
+
+[33mcommit 0ad0ddcd2fb8f6beb31e1a2b1b93bf42f7911ddf[m
+Author: David Ponte <76748144+dvdgamer@users.noreply.github.com>
+Date:   Tue Sep 10 18:15:00 2024 +0200
+
+    Initial commit

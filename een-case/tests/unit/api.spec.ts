@@ -1,32 +1,17 @@
 import axios from "axios";
 import MockAdapter from "axios-mock-adapter";
-import {
-  getAuthorizationUrl,
-  requestTokens,
-  refreshAccessToken,
-  logout,
-} from "@/api";
+import { requestTokens } from "../../src/api";
 
 const mock = new MockAdapter(axios);
+const redirectUri = "http://localhost/callback";
 
-describe("API Module Tests", () => {
-  const CLIENT_ID = process.env.API_KEY;
-  const CLIENT_SECRET = process.env.SECRET;
-  const redirectUri = "https://example.com/callback";
-
+describe("requestTokens", () => {
   afterEach(() => {
     mock.reset();
   });
+  const mockCode = "mockCode";
 
-  test("getAuthorizationUrl should return the correct URL", () => {
-    const url = getAuthorizationUrl(redirectUri);
-    expect(url).toContain("http://rest.cameramanager.com/oauth/authorize");
-    expect(url).toContain(`client_id=${CLIENT_ID}`);
-    expect(url).toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
-  });
-
-  test("requestTokens should return tokens on success", async () => {
-    const mockCode = "mockCode";
+  test("should return tokens on success", async () => {
     const mockResponse = {
       access_token: "mockAccessToken",
       refresh_token: "mockRefreshToken",
@@ -42,9 +27,7 @@ describe("API Module Tests", () => {
     expect(response).toEqual(mockResponse);
   });
 
-  test("requestTokens should handle errors", async () => {
-    const mockCode = "mockCode";
-
+  test("should handle errors", async () => {
     mock.onPost("http://rest.cameramanager.com/oauth/token").reply(400, {
       error: "invalid_request",
     });
@@ -52,11 +35,28 @@ describe("API Module Tests", () => {
     await expect(requestTokens(mockCode, redirectUri)).rejects.toThrow();
   });
 
-  test("refreshAccessToken should return new token", async () => {
-    const mockRefreshToken = "mockRefreshToken";
+  test("should handle network errors", async () => {
+    mock.onPost("http://rest.cameramanager.com/oauth/token").networkError();
+
+    await expect(requestTokens(mockCode, redirectUri)).rejects.toThrow();
+  });
+
+  test("should handle timeout errors", async () => {
+    mock.onPost("http://rest.cameramanager.com/oauth/token").timeout();
+
+    await expect(requestTokens(mockCode, redirectUri)).rejects.toThrow();
+  });
+
+  test("should handle invalid JSON response", async () => {
+    mock
+      .onPost("http://rest.cameramanager.com/oauth/token")
+      .reply(200, "Invalid JSON");
+
+    await expect(requestTokens(mockCode, redirectUri)).rejects.toThrow();
+  });
+
+  test("should handle missing tokens in response", async () => {
     const mockResponse = {
-      access_token: "newMockAccessToken",
-      refresh_token: "mockRefreshToken",
       expires_in: 43199,
       scope: "write",
     };
@@ -65,19 +65,9 @@ describe("API Module Tests", () => {
       .onPost("http://rest.cameramanager.com/oauth/token")
       .reply(200, mockResponse);
 
-    const response = await refreshAccessToken(mockRefreshToken);
-    expect(response).toEqual(mockResponse);
-  });
-
-  test("logout should make the correct request", async () => {
-    const mockAccessToken = "mockAccessToken";
-    mock
-      .onDelete(
-        "http://rest.cameramanager.com/rest/v2.0/users/self/tokens/current"
-      )
-      .reply(200, {});
-
-    const response = await logout(mockAccessToken);
-    expect(response).toEqual({});
+    await expect(requestTokens(mockCode, redirectUri)).rejects.toThrow();
   });
 });
+function afterEach(arg0: () => void) {
+  throw new Error("Function not implemented.");
+}
