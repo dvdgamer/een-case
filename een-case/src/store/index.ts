@@ -1,9 +1,7 @@
 import { createStore } from "vuex";
 import {
-  getAuthorizationUrl,
   requestTokens,
-  refreshAccessToken,
-  logout,
+  // refreshAccessToken,
 } from "@/api";
 
 export default createStore({
@@ -33,22 +31,6 @@ export default createStore({
         commit("setTokens", tokens);
       } catch (error) {
         console.log("Error logging in:", error);
-      }
-    },
-    async refreshToken({ commit }, refreshToken) {
-      try {
-        const newTokens = await refreshAccessToken(refreshToken);
-        commit("setTokens", newTokens);
-      } catch (error) {
-        console.error("Error refreshing token:", error);
-      }
-    },
-    async logout({ commit }, accessToken) {
-      try {
-        await logout(accessToken);
-        commit("clearTokens");
-      } catch (error) {
-        console.error("Error logging out:", error);
       }
     },
     fetchCameras({ commit }) {
