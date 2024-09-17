@@ -1,39 +1,52 @@
+import { getAccessToken } from "@/api";
 import { createStore } from "vuex";
-import {
-  requestTokens,
-  // refreshAccessToken,
-} from "@/api";
+// import { requestTokens } from "@/api";
 
 export default createStore({
   state: {
     cameras: [],
-    tokens: null,
+    code: null,
+    accessToken: null,
   },
   getters: {
     allCameras: (state) => state.cameras,
-    isAuthenticated: (state) => !!state.tokens,
+    isAuthenticated: (state) => {
+      console.log("Checking isAuthenticated:", !!state.code);
+      console.log("state.code :", state.code);
+      return !!state.code;
+    },
   },
   mutations: {
+    setCode(state, code) {
+      state.code = code;
+    },
     setCameras(state, cameras) {
       state.cameras = cameras;
     },
-    setToken(state, tokens) {
-      state.tokens = tokens;
-    },
-    clearTokens(state) {
-      state.tokens = null;
+    setAccessToken(state, accessToken) {
+      state.accessToken = accessToken;
+      console.log("accessToken:", accessToken);
     },
   },
   actions: {
-    async login({ commit }, { code, redirectUri }) {
-      try {
-        const tokens = await requestTokens(code, redirectUri);
-        commit("setTokens", tokens);
-      } catch (error) {
-        console.log("Error logging in:", error);
-      }
+    async getAccessToken({ commit }, code) {
+      return getAccessToken(code)
+        .then((tokens) => {
+          commit("setAccessToken", tokens.access_token);
+          console.log("tokens :", tokens);
+
+          return tokens;
+        })
+        .catch((error) => {
+          console.error("Error getting access token:", error);
+          throw error;
+        });
     },
-    fetchCameras({ commit }) {
+    fetchCameras({ commit, getters }) {
+      if (!getters.isAuthenticated) {
+        console.log("User is not logged in.");
+        return;
+      }
       // Simulate an API call to fetch cameras
       const cameras = [
         { id: 1, name: "Camera 1" },
@@ -42,5 +55,4 @@ export default createStore({
       commit("setCameras", cameras);
     },
   },
-  modules: {},
 });

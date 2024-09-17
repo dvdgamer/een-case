@@ -31,7 +31,7 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: "/callback",
-    name: "callback",
+    name: "Callback",
     component: CallbackView,
   },
 ];
@@ -39,6 +39,11 @@ const routes: Array<RouteRecordRaw> = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  console.log(`Navigating to: ${to.path}`);
+  next();
 });
 
 export default router;

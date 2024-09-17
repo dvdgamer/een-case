@@ -1,17 +1,25 @@
 <template>
-  <div class="login-container">
+  <div v-if="isAuthenticated" class="login-container">
+    <h1>You are logged in! :D</h1>
+  </div>
+  <div v-else class="login-container">
     <h1>Login</h1>
     <button @click="redirectToLogin">Login with CameraManager</button>
   </div>
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 import { redirectToLogin } from "@/api";
 
 export default {
   name: "LoginView",
-  methods: {
-    redirectToLogin,
+  methods: { redirectToLogin },
+  computed: {
+    ...mapGetters(["isAuthenticated"]),
+  },
+  created() {
+    console.log("isAuthenticated", this.isAuthenticated);
   },
 };
 </script>
