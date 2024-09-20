@@ -2,7 +2,8 @@ import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import CameraListView from "@/views/CameraList.vue";
 import LoginView from "@/views/LoginView.vue";
-import CallbackView from "@/views/CallbackView.vue";
+// import CallbackView from "@/views/CallbackView.vue";
+import OAuthHandler from "@/views/OAuthHandler.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -29,21 +30,21 @@ const routes: Array<RouteRecordRaw> = [
     name: "login",
     component: LoginView,
   },
+  // {
+  //   path: "/callback",
+  //   name: "Callback",
+  //   component: CallbackView,
+  // },
   {
     path: "/callback",
-    name: "Callback",
-    component: CallbackView,
+    name: "OAuthHandler",
+    component: OAuthHandler,
   },
 ];
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
-});
-
-router.beforeEach((to, from, next) => {
-  console.log(`Navigating to: ${to.path}`);
-  next();
 });
 
 export default router;

@@ -8,7 +8,7 @@
 import { onMounted } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-// import { requestTokens } from "@/api";
+import { getAccessToken } from "@/api";
 
 export default {
   name: "CallbackView",
@@ -25,8 +25,12 @@ export default {
       store.commit("setCode", code);
 
       try {
-        const tokens = await store.dispatch("getAccessToken", code);
-        console.log("Tokens received:", tokens);
+        const tokens = await getAccessToken(code);
+        store.commit("setAccessToken", tokens.access_token);
+        console.log(
+          "setAccessToken ran in CallbackView. tokens.access_token :",
+          tokens.access_token
+        );
 
         router.push({ name: "CameraList" });
       } catch (error) {

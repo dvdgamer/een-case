@@ -1,24 +1,23 @@
 import { getAccessToken } from "@/api";
 import { createStore } from "vuex";
-// import { requestTokens } from "@/api";
 
 export default createStore({
   state: {
-    cameras: [],
     code: null,
     accessToken: null,
+    refreshToken: null,
+    cameras: [],
   },
   getters: {
-    allCameras: (state) => state.cameras,
     isAuthenticated: (state) => {
-      console.log("Checking isAuthenticated:", !!state.code);
-      console.log("state.code :", state.code);
-      return !!state.code;
+      console.log("state.accessToken :", state.accessToken);
+      return !!state.accessToken;
     },
   },
   mutations: {
     setCode(state, code) {
       state.code = code;
+      console.log("code :", code);
     },
     setCameras(state, cameras) {
       state.cameras = cameras;
@@ -26,6 +25,10 @@ export default createStore({
     setAccessToken(state, accessToken) {
       state.accessToken = accessToken;
       console.log("accessToken:", accessToken);
+    },
+    setRefreshToken(state, refreshToken) {
+      state.refreshToken = refreshToken;
+      console.log("accessToken:", refreshToken);
     },
   },
   actions: {
@@ -44,10 +47,12 @@ export default createStore({
     },
     fetchCameras({ commit, getters }) {
       if (!getters.isAuthenticated) {
-        console.log("User is not logged in.");
+        console.log("User is NOT logged in.");
         return;
       }
+
       // Simulate an API call to fetch cameras
+      console.log("User IS logged in.");
       const cameras = [
         { id: 1, name: "Camera 1" },
         { id: 2, name: "Camera 2" },
