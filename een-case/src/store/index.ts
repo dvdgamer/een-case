@@ -1,4 +1,4 @@
-import { getAccessToken } from "@/api";
+import { getAccessToken, refreshAccessToken } from "@/api";
 import { createStore } from "vuex";
 
 export default createStore({
@@ -6,36 +6,48 @@ export default createStore({
     code: null,
     accessToken: null,
     refreshToken: null,
-    cameras: [],
+    tokenExpiration: null,
+    cameras: null,
   },
   getters: {
     isAuthenticated: (state) => {
-      console.log("state.accessToken :", state.accessToken);
       return !!state.accessToken;
+    },
+    allCameras: (state) => {
+      return state.cameras;
     },
   },
   mutations: {
     setCode(state, code) {
       state.code = code;
-      console.log("code :", code);
     },
     setCameras(state, cameras) {
       state.cameras = cameras;
     },
     setAccessToken(state, accessToken) {
       state.accessToken = accessToken;
-      console.log("accessToken:", accessToken);
     },
     setRefreshToken(state, refreshToken) {
       state.refreshToken = refreshToken;
-      console.log("accessToken:", refreshToken);
+    },
+    setTokenExpiration(state, expiration) {
+      state.tokenExpiration = expiration;
     },
   },
   actions: {
-    async getAccessToken({ commit }, code) {
+    async getAccessToken({ commit, dispatch }, code) {
       return getAccessToken(code)
         .then((tokens) => {
-          commit("setAccessToken", tokens.access_token);
+          if (!tokens) {
+            throw new Error("Tokens are undefined");
+          } else {
+            console.log("getAccessToken is running");
+            commit("setAccessToken", tokens.access_token);
+            commit("setRefreshToken", tokens.refresh_token);
+            const expirationTime = Date.now() + tokens.expires_in * 1000;
+            commit("setTokenExpiration", expirationTime);
+            dispatch("scheduleTokenRefresh", tokens.expires_in);
+          }
           console.log("tokens :", tokens);
 
           return tokens;
@@ -45,19 +57,39 @@ export default createStore({
           throw error;
         });
     },
-    fetchCameras({ commit, getters }) {
-      if (!getters.isAuthenticated) {
-        console.log("User is NOT logged in.");
-        return;
+    async refreshAccessToken({ state, commit, dispatch }) {
+      console.log("refreshAccessToken is running");
+      if (!state.refreshToken) {
+        throw new Error("No refresh token available");
       }
+      return refreshAccessToken(state.refreshToken)
+        .then((tokens) => {
+          if (!tokens) {
+            throw new Error("Tokens are undefined");
+          } else {
+            commit("setAccessToken", tokens.access_token);
+            commit("setRefreshToken", tokens.refresh_token);
+            const expirationTime = Date.now() + tokens.expires_in * 1000;
+            commit("setTokenExpiration", expirationTime);
+            dispatch("scheduleTokenRefresh", tokens.expires_in);
+          }
+          console.log("tokens :", tokens);
 
-      // Simulate an API call to fetch cameras
-      console.log("User IS logged in.");
-      const cameras = [
-        { id: 1, name: "Camera 1" },
-        { id: 2, name: "Camera 2" },
-      ];
-      commit("setCameras", cameras);
+          return tokens;
+        })
+        .catch((error) => {
+          console.error("Error refreshing access token:", error);
+          throw error;
+        });
+    },
+    scheduleTokenRefresh({ dispatch }, expiresIn) {
+      console.log("scheduleTokenRefresh is running");
+      // Refresh 1 minute before expiration
+      const refreshTime = (expiresIn - 60) * 1000;
+      setTimeout(() => {
+        console.log("Executing refreshAccessToken from scheduleTokenRefresh");
+        dispatch("refreshAccessToken");
+      }, refreshTime);
     },
   },
 });

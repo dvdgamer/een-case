@@ -19,7 +19,7 @@ export default {
     ...mapGetters(["isAuthenticated"]),
   },
   created() {
-    console.log("isAuthenticated", this.isAuthenticated);
+    console.log("isAuthenticated :", this.isAuthenticated);
   },
 };
 </script>

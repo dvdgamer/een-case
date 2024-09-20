@@ -1,47 +1,41 @@
-<template>
-  <div>
-    <p v-if="loading">Logging in...</p>
-    <p v-if="error">{{ error }}</p>
-  </div>
-</template>
-
 <script>
 import { onMounted, ref } from "vue";
-import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import { getAccessToken } from "@/api";
+import { useStore } from "vuex";
+import { handleError } from "@/utils/errorHandler";
 
 export default {
   name: "OAuthHandler",
   setup() {
     const loading = ref(true);
     const error = ref(null);
-    const store = useStore();
     const router = useRouter();
+    const store = useStore();
 
-    const handleError = (message, err) => {
-      error.value = message + (err?.message ? `: ${err.message}` : "");
-      console.error("Detailed error:", err);
-    };
+    /**
+     * Handles the process of obtaining the access token using the authorization code.
+     * @param code - The authorization code received from the OAuth2 flow.
+     */
     const handleAccessToken = async (code) => {
       try {
-        const tokenData = await getAccessToken(code);
-        console.log("Received token data:", tokenData);
-
-        store.commit("setAccessToken", tokenData.access_token);
-        store.commit("setRefreshToken", tokenData.refresh_token);
+        // Dispatch the getAccessToken action from the Vuex store
+        const tokenData = await store.dispatch("getAccessToken", code);
+        console.log("Access token obtained:", tokenData);
       } catch (err) {
         handleError("Failed to get access token", err);
       }
     };
 
+    // Lifecycle hook that runs when the component is mounted
     onMounted(async () => {
+      // Get the authorization code from the URL query parameters
       const code = new URLSearchParams(window.location.search).get("code");
       if (code) {
         await handleAccessToken(code);
       } else {
         error.value = "No authorization code found in the URL";
       }
+      // Redirect to the CameraList view after handling the token
       router.push({ name: "CameraList" });
       loading.value = false;
     });

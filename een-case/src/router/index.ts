@@ -30,11 +30,6 @@ const routes: Array<RouteRecordRaw> = [
     name: "login",
     component: LoginView,
   },
-  // {
-  //   path: "/callback",
-  //   name: "Callback",
-  //   component: CallbackView,
-  // },
   {
     path: "/callback",
     name: "OAuthHandler",
