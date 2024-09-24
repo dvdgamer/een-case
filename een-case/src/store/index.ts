@@ -41,14 +41,12 @@ export default createStore({
           if (!tokens) {
             throw new Error("Tokens are undefined");
           } else {
-            console.log("getAccessToken is running");
             commit("setAccessToken", tokens.access_token);
             commit("setRefreshToken", tokens.refresh_token);
             const expirationTime = Date.now() + tokens.expires_in * 1000;
             commit("setTokenExpiration", expirationTime);
             dispatch("scheduleTokenRefresh", tokens.expires_in);
           }
-          console.log("tokens :", tokens);
 
           return tokens;
         })
@@ -73,8 +71,6 @@ export default createStore({
             commit("setTokenExpiration", expirationTime);
             dispatch("scheduleTokenRefresh", tokens.expires_in);
           }
-          console.log("tokens :", tokens);
-
           return tokens;
         })
         .catch((error) => {

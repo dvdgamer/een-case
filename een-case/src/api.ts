@@ -9,6 +9,18 @@ interface OAuthTokenResponse {
   scope: string;
 }
 
+// interface CameraAdditionStatus {
+//   Status: "added" | "failure" | "inProgress" | "validated";
+//   SubStatus: string;
+// }
+
+interface CameraData {
+  id: string;
+  name: string;
+  status: string;
+  // Add other properties as needed
+}
+
 // Client ID and Client Secret from environment variables
 const CLIENT_ID = process.env.VUE_APP_API_KEY;
 const CLIENT_SECRET = process.env.VUE_APP_API_SECRET;
@@ -151,9 +163,9 @@ export const fetchCameraAPI = async (
 export const addCamera = async (
   accessToken: string,
   cameraData: unknown
-): Promise<Response> => {
+): Promise<{ id: string }> => {
   try {
-    const response = await fetch("api/rest/v2.0/cameras", {
+    const response = await fetch("api/rest/v2.0/users/self/cameras", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -166,10 +178,34 @@ export const addCamera = async (
     if (!response.ok) {
       throw new Error(`Failed to add camera: ${response.statusText}`);
     }
-
-    return response;
+    console.log("Success with the addCamera :", response);
+    return response.json();
   } catch (error) {
     console.error("Error in addCamera:", error);
+    throw error;
+  }
+};
+
+export const fetchCameraList = async (
+  accessToken: string
+): Promise<CameraData[]> => {
+  try {
+    const response = await fetch("api/rest/v2.0/cameras", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch camera list: ${response.statusText}`);
+    }
+
+    const cameraList = await response.json();
+    return cameraList;
+  } catch (error) {
+    console.error("Error in fetchCameraList:", error);
     throw error;
   }
 };
