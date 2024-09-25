@@ -1,4 +1,5 @@
 import { getAccessToken, refreshAccessToken } from "@/api";
+import { Camera } from "@/types";
 import { createStore } from "vuex";
 
 export default createStore({
@@ -7,7 +8,7 @@ export default createStore({
     accessToken: null,
     refreshToken: null,
     tokenExpiration: null,
-    cameras: null,
+    cameras: null as Camera[] | null,
   },
   getters: {
     isAuthenticated: (state) => {
@@ -21,7 +22,7 @@ export default createStore({
     setCode(state, code) {
       state.code = code;
     },
-    setCameras(state, cameras) {
+    setCameras(state, cameras: Camera[]) {
       state.cameras = cameras;
     },
     setAccessToken(state, accessToken) {

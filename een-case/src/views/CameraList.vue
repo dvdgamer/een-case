@@ -3,25 +3,28 @@
     <h1>Welcome to your Camera List</h1>
     <div v-if="loading">Loading cameras...</div>
     <div v-else-if="error">{{ error }}</div>
-    <ul v-else>
-      <li v-for="Camera in cameraList" :key="Camera.cameraId">
-        {{ Camera.name }}
-      </li>
-    </ul>
-    <h2>Add a new camera</h2>
-    <button @click="handleCameraList">Add New Camera</button>
-    <div v-if="addCameraStatus">{{ addCameraStatus }}</div>
+    <div v-else>
+      <h2>Available cameras:</h2>
+      <ul>
+        <li v-for="camera in cameraList" :key="camera.cameraId">
+          {{ camera.name }}
+          <button @click="handleAddCamera(accessToken, camera.cameraId)">
+            Add Camera
+          </button>
+          <span v-if="addCameraStatus[camera.cameraId]">
+            {{ addCameraStatus[camera.cameraId] }}
+          </span>
+        </li>
+      </ul>
+    </div>
+    <button @click="fetchCameras">Check for available cameras</button>
   </div>
 </template>
 
 <script lang="ts">
-import {
-  fetchCameraAPI,
-  // addAndCheckCameraStatus,
-  fetchCameraList,
-} from "@/api";
-import { useStore } from "vuex";
 import { defineComponent, ref, onMounted } from "vue";
+import { useStore } from "vuex";
+import { fetchCameraList, checkCameraAdditionStatus, addCamera } from "@/api";
 import { Camera } from "@/types";
 
 export default defineComponent({
@@ -30,59 +33,72 @@ export default defineComponent({
     const store = useStore();
     const loading = ref(true);
     const error = ref<string | null>(null);
-    // const cameraData = ref<{ name: string }>({ name: "" });
-    const addCameraStatus = ref<string | null>(null);
-    const accessToken = store.state.accessToken;
-    const newCameraData = ref<{ name: string }>({ name: "" });
     const cameraList = ref<Camera[]>([]);
+    const addCameraStatus = ref<Record<number, string>>({});
+    const accessToken = store.state.accessToken;
 
-    const loadCameras = async () => {
+    const fetchCameras = async () => {
       try {
-        console.log("Access token from Vuex store:", accessToken);
+        loading.value = true;
         if (!accessToken) {
-          throw new Error("No access token found in Vuex store");
+          throw new Error("You need to login");
         }
-        await fetchCameraAPI(accessToken);
+        cameraList.value = await fetchCameraList(accessToken);
+        console.log(cameraList.value);
       } catch (err) {
-        if (err instanceof Error) {
-          error.value = err.message;
-        } else {
-          error.value = String(err);
-        }
+        error.value = err instanceof Error ? err.message : String(err);
       } finally {
         loading.value = false;
       }
     };
 
-    const handleCameraList = async () => {
+    const handleAddCamera = async (accessToken: string, cameraId: number) => {
       try {
-        addCameraStatus.value = "Adding camera...";
-
-        addCameraStatus.value = "Camera added successfully!";
-        newCameraData.value = { name: "" }; // Reset the new camera data
-        // Refresh the camera list after adding a new camera
-        const cameraDataList = await fetchCameraList(accessToken);
-        console.log("handleCameraList (cameraList.value):", cameraDataList);
+        addCameraStatus.value[cameraId] = "Adding camera...";
+        await addCamera(accessToken, cameraId);
+        pollCameraStatus(cameraId);
       } catch (err) {
-        if (err instanceof Error) {
-          addCameraStatus.value = `Error: ${err.message}`;
-        } else {
-          addCameraStatus.value = `Error: ${String(err)}`;
-        }
+        addCameraStatus.value[cameraId] = `Error: ${
+          err instanceof Error ? err.message : String(err)
+        }`;
       }
     };
-    onMounted(() => {
-      loadCameras();
-      // handleCameraList();
-    });
+
+    const pollCameraStatus = async (cameraId: number) => {
+      try {
+        const status = await checkCameraAdditionStatus(accessToken, cameraId);
+        switch (status.Status) {
+          case "added":
+            addCameraStatus.value[cameraId] = "Camera added successfully!";
+            break;
+          case "failure":
+            addCameraStatus.value[
+              cameraId
+            ] = `Failed to add camera: ${status.SubStatus}`;
+            break;
+          case "inProgress":
+          case "validated":
+            addCameraStatus.value[cameraId] =
+              "Failed to add camera: unexpected status";
+            break;
+        }
+      } catch (err) {
+        addCameraStatus.value[cameraId] = `Error checking status: ${
+          err instanceof Error ? err.message : String(err)
+        }`;
+      }
+    };
+
+    onMounted(fetchCameras);
 
     return {
       loading,
       error,
-      // cameraData,
-      handleCameraList,
-      addCameraStatus,
       cameraList,
+      addCameraStatus,
+      fetchCameras,
+      handleAddCamera,
+      accessToken,
     };
   },
 });
