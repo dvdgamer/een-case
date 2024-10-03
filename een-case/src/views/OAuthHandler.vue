@@ -19,8 +19,7 @@ export default {
     const handleAccessToken = async (code) => {
       try {
         // Dispatch the getAccessToken action from the Vuex store
-        const tokenData = await store.dispatch("getAccessToken", code);
-        console.log("Access token obtained:", tokenData);
+        await store.dispatch("getAccessToken", code);
       } catch (err) {
         handleError("Failed to get access token", err);
       }

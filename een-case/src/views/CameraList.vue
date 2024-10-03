@@ -1,30 +1,43 @@
 <template>
   <div class="camera-list">
-    <h1>Welcome to your Camera List</h1>
-    <div v-if="loading">Loading cameras...</div>
-    <div v-else-if="error">{{ error }}</div>
-    <div v-else>
-      <h2>Available cameras:</h2>
-      <ul>
-        <li v-for="camera in cameraList" :key="camera.cameraId">
-          {{ camera.name }}
-          <button @click="handleAddCamera(accessToken, camera.cameraId)">
-            Add Camera
-          </button>
-          <span v-if="addCameraStatus[camera.cameraId]">
-            {{ addCameraStatus[camera.cameraId] }}
-          </span>
-        </li>
-      </ul>
+    <div v-if="!accessToken" class="login">
+      <h1>You need to <a href="/#/login">LOGIN</a></h1>
     </div>
-    <button @click="fetchCameras">Check for available cameras</button>
+    <div v-else>
+      <div v-if="loading">Loading cameras...</div>
+      <div v-else-if="error">{{ error }}</div>
+      <div v-else>
+        <h1>Welcome to your Camera List</h1>
+        <h2>Available cameras:</h2>
+        <ul>
+          <li v-for="camera in cameraList" :key="camera.cameraId">
+            {{ camera.name }}
+            <button @click="handleAddCamera(accessToken, camera.cameraId)">
+              Add Camera
+            </button>
+            <button @click="addAndCheckStatus(accessToken, camera.cameraId)">
+              add and check Status
+            </button>
+            <span v-if="addCameraStatus[camera.cameraId]">
+              {{ addCameraStatus[camera.cameraId] }}
+            </span>
+          </li>
+        </ul>
+      </div>
+      <button @click="fetchCameras">Check for available cameras</button>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
 import { useStore } from "vuex";
-import { fetchCameraList, checkCameraAdditionStatus, addCamera } from "@/api";
+import {
+  fetchCameraList,
+  addAndCheckCameraStatus,
+  addCamera,
+  // checkSelfStatus,
+} from "@/api";
 import { Camera } from "@/types";
 
 export default defineComponent({
@@ -43,8 +56,8 @@ export default defineComponent({
         if (!accessToken) {
           throw new Error("You need to login");
         }
-        cameraList.value = await fetchCameraList(accessToken);
-        console.log(cameraList.value);
+        cameraList.value = await fetchCameraList(accessToken); //retrieves an array with the Camera objects
+        // checkSelfStatus(accessToken);
       } catch (err) {
         error.value = err instanceof Error ? err.message : String(err);
       } finally {
@@ -52,38 +65,17 @@ export default defineComponent({
       }
     };
 
+    const addAndCheckStatus = async (accessToken: string, cameraId: number) => {
+      addAndCheckCameraStatus(accessToken, cameraId);
+    };
+
     const handleAddCamera = async (accessToken: string, cameraId: number) => {
       try {
         addCameraStatus.value[cameraId] = "Adding camera...";
         await addCamera(accessToken, cameraId);
-        pollCameraStatus(cameraId);
+        // await pollCameraStatus(cameraId);
       } catch (err) {
         addCameraStatus.value[cameraId] = `Error: ${
-          err instanceof Error ? err.message : String(err)
-        }`;
-      }
-    };
-
-    const pollCameraStatus = async (cameraId: number) => {
-      try {
-        const status = await checkCameraAdditionStatus(accessToken, cameraId);
-        switch (status.Status) {
-          case "added":
-            addCameraStatus.value[cameraId] = "Camera added successfully!";
-            break;
-          case "failure":
-            addCameraStatus.value[
-              cameraId
-            ] = `Failed to add camera: ${status.SubStatus}`;
-            break;
-          case "inProgress":
-          case "validated":
-            addCameraStatus.value[cameraId] =
-              "Failed to add camera: unexpected status";
-            break;
-        }
-      } catch (err) {
-        addCameraStatus.value[cameraId] = `Error checking status: ${
           err instanceof Error ? err.message : String(err)
         }`;
       }
@@ -99,7 +91,16 @@ export default defineComponent({
       fetchCameras,
       handleAddCamera,
       accessToken,
+      addAndCheckStatus,
     };
   },
 });
 </script>
+<style scoped>
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+}
+</style>

@@ -11,9 +11,13 @@ interface OAuthTokenResponse {
   scope: string;
 }
 
-interface CameraAdditionStatus {
-  Status: "added" | "failure" | "inProgress" | "validated";
-  SubStatus: string;
+interface CameraStatusResponse {
+  audioEnabled: boolean;
+  cameraId: number;
+  online: boolean;
+  passwordKnown: boolean;
+  recordingOnCloud: boolean;
+  recordingOnSd: boolean;
 }
 
 // Client ID and Client Secret from environment variables
@@ -124,10 +128,6 @@ export const refreshAccessToken = async (
   }
 };
 
-/**
- * Accesses the API to be able to add Cameras.
- * @returns an empty object.
- */
 export const fetchCameraAPI = async (
   accessToken: string
 ): Promise<Record<string, never>> => {
@@ -136,7 +136,7 @@ export const fetchCameraAPI = async (
   }
 
   try {
-    const response = await fetch("api/rest/v2.0/users/self/", {
+    const response = await fetch("api/rest/v2.4/users/self/", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -158,7 +158,7 @@ export const fetchCameraList = async (
   accessToken: string
 ): Promise<Camera[]> => {
   try {
-    const response = await fetch("api/rest/v2.0/cameras", {
+    const response = await fetch("api/rest/v2.4/cameras", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
@@ -183,11 +183,10 @@ export const addCamera = async (
   cameraId: unknown
 ): Promise<Response> => {
   try {
-    const response = await fetch(`/api/rest/v2.0/cameras/${cameraId}`, {
+    const response = await fetch(`/api/rest/v2.4/cameras/${cameraId}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        // "Content-Type": "application/json",
         Accept: "application/json",
       },
     });
@@ -196,7 +195,7 @@ export const addCamera = async (
       throw new Error(`Failed to add camera: ${response.statusText}`);
     }
     console.log("Success with the addCamera :", response);
-    return response.json();
+    return response;
   } catch (error) {
     console.error("Error in addCamera:", error);
     throw error;
@@ -206,17 +205,17 @@ export const addCamera = async (
 export const checkCameraAdditionStatus = async (
   accessToken: string,
   cameraId: number
-): Promise<CameraAdditionStatus> => {
+): Promise<CameraStatusResponse> => {
   if (!cameraId) {
     throw new Error("Camera ID is required to check addition status");
   }
   const response = await fetch(
-    `api/rest/v2.0/users/self/cameras/${cameraId}/status`,
+    `api/rest/v2.4/cameras/${cameraId}/additionStatus/poll`,
     {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
+        Accept: "application/json, text/plain, */*",
       },
     }
   );
@@ -228,27 +227,26 @@ export const checkCameraAdditionStatus = async (
   }
 
   const data = await response.json();
-  return {
-    Status: data.Status as CameraAdditionStatus["Status"],
-    SubStatus: data.SubStatus,
-  };
+  console.log("checkCameraAdditionStatus: ", data);
+  return data;
 };
 
 export const addAndCheckCameraStatus = async (
   accessToken: string,
   cameraId: number
-): Promise<CameraAdditionStatus> => {
+): Promise<unknown> => {
+  // first addCamera
   const addResponse = await addCamera(accessToken, cameraId);
-  const response = await addResponse.json(); // Assuming the response returns the ID of the newly added camera
 
-  let status: CameraAdditionStatus = { Status: "inProgress", SubStatus: "" };
+  // let status: CameraAdditionStatus = { Status: "inProgress", SubStatus: "" };
+  let status;
   let retries = 0;
   const maxRetries = 10; // 10 * 18 seconds = 180 seconds (3 minutes)
   const retryDelay = 18000; // 18 seconds
 
-  console.log(response);
+  console.log("addAndCheckCameraStatus :", addResponse);
 
-  while (status.Status === "inProgress" && retries < maxRetries) {
+  while (status === undefined && retries < maxRetries) {
     try {
       status = await checkCameraAdditionStatus(accessToken, cameraId);
       console.log("Camera addition status:", status);
@@ -259,13 +257,6 @@ export const addAndCheckCameraStatus = async (
       throw error;
     }
   }
-
+  console.log("status: ", status);
   return status;
 };
-// export const addAndCheckCameraStatus = async (
-//   accessToken: string,
-//   cameraId: string
-// ): Promise<{ Status: string; SubStatus?: string }> => {
-//   const { id } = await addCamera(accessToken, cameraId);
-//   return checkCameraAdditionStatus(accessToken, id);
-// };
