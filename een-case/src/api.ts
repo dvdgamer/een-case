@@ -238,7 +238,6 @@ export const addAndCheckCameraStatus = async (
   // first addCamera
   const addResponse = await addCamera(accessToken, cameraId);
 
-  // let status: CameraAdditionStatus = { Status: "inProgress", SubStatus: "" };
   let status;
   let retries = 0;
   const maxRetries = 10; // 10 * 18 seconds = 180 seconds (3 minutes)
