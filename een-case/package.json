@@ -6,15 +6,26 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "test": "jest"
   },
   "dependencies": {
-    "vue": "^3.2.13",
+    "@types/cors": "^2.8.17",
+    "axios": "^1.7.7",
+    "base-64": "^1.0.0",
+    "cors": "^2.8.5",
     "vue-router": "^4.0.3",
-    "vuex": "^4.0.0"
+    "vuex": "^4.1.0",
+    "vuex-persistedstate": "^4.1.0"
   },
   "devDependencies": {
-    "@types/jest": "^27.0.1",
+    "@babel/preset-env": "^7.25.4",
+    "@babel/preset-typescript": "^7.24.7",
+    "@types/axios": "^0.14.0",
+    "@types/base-64": "^1.0.2",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^22.5.4",
+    "@types/node-fetch": "^2.6.11",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
@@ -25,17 +36,19 @@
     "@vue/cli-service": "~5.0.0",
     "@vue/eslint-config-typescript": "^9.1.0",
     "@vue/test-utils": "^2.0.0-0",
-    "@vue/vue3-jest": "^27.0.0-alpha.1",
-    "babel-jest": "^27.0.6",
+    "@vue/vue3-jest": "^27.0.0",
+    "axios-mock-adapter": "^2.0.0",
+    "babel-jest": "^27.5.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-vue": "^8.0.3",
-    "jest": "^27.0.5",
+    "jest": "^27.5.1",
     "lint-staged": "^11.1.2",
     "prettier": "^2.4.1",
-    "ts-jest": "^27.0.4",
-    "typescript": "~4.5.5"
+    "ts-jest": "^27.1.5",
+    "typescript": "~4.5.5",
+    "vue": "^3.5.8"
   },
   "eslintConfig": {
     "root": true,
