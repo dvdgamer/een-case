@@ -1,10 +1,12 @@
 <template>
   <div class="container">
+    <!-- Display login status based on authentication state -->
     <div v-if="isAuthenticated" class="login-box">
       <h1>You are logged in! :D</h1>
     </div>
     <div v-else class="login-box">
       <h1>Login</h1>
+      <!-- Button to trigger login with CameraManager -->
       <button @click="redirectToLogin">Login with CameraManager</button>
     </div>
   </div>
@@ -16,11 +18,16 @@ import { redirectToLogin } from "@/api";
 
 export default {
   name: "LoginView",
-  methods: { redirectToLogin },
+  methods: {
+    // Method to redirect user to the login page
+    redirectToLogin,
+  },
   computed: {
+    // Map Vuex getter to check if the user is authenticated
     ...mapGetters(["isAuthenticated"]),
   },
   created() {
+    // Log the authentication status when the component is created
     console.log("isAuthenticated :", this.isAuthenticated);
   },
 };

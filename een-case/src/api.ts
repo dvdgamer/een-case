@@ -1,6 +1,5 @@
 import { handleError } from "@/utils/errorHandler";
 import { Camera } from "./types";
-// import CameraDetails from "./views/CameraDetails.vue";
 
 // Interface representing the structure of the OAuth token response
 interface OAuthTokenResponse {
@@ -9,15 +8,6 @@ interface OAuthTokenResponse {
   expires_in: number;
   refresh_token: string;
   scope: string;
-}
-
-interface CameraStatusResponse {
-  audioEnabled: boolean;
-  cameraId: number;
-  online: boolean;
-  passwordKnown: boolean;
-  recordingOnCloud: boolean;
-  recordingOnSd: boolean;
 }
 
 // Client ID and Client Secret from environment variables
@@ -128,6 +118,11 @@ export const refreshAccessToken = async (
   }
 };
 
+/**
+ * Fetches the camera API.
+ * @param accessToken - The access token for authorization.
+ * @returns A promise that resolves to an empty object.
+ */
 export const fetchCameraAPI = async (
   accessToken: string
 ): Promise<Record<string, never>> => {
@@ -154,6 +149,11 @@ export const fetchCameraAPI = async (
   }
 };
 
+/**
+ * Fetches the list of cameras.
+ * @param accessToken - The access token for authorization.
+ * @returns A promise that resolves to an array of Camera objects.
+ */
 export const fetchCameraList = async (
   accessToken: string
 ): Promise<Camera[]> => {
@@ -178,6 +178,41 @@ export const fetchCameraList = async (
   }
 };
 
+/**
+ * Adds all cameras to the requesting user's account.
+ * Returns a resource not found error if the zone where the cameras should be added does not exist.
+ * @param accessToken - The access token for authorization.
+ * @returns A promise that resolves to the response object.
+ */
+export const addAllCamerasToAccount = async (
+  accessToken: string
+): Promise<Response> => {
+  try {
+    const response = await fetch(`/api/rest/v2.4/cameras`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to add all cameras: ${response.statusText}`);
+    }
+    console.log("Successfully added all cameras:", response);
+    return response;
+  } catch (error) {
+    console.error("Error in addAllCamerasToAccount:", error);
+    throw error;
+  }
+};
+
+/**
+ * Adds a camera.
+ * @param accessToken - The access token for authorization.
+ * @param cameraId - The ID of the camera to add.
+ * @returns A promise that resolves to the response object.
+ */
 export const addCamera = async (
   accessToken: string,
   cameraId: unknown
@@ -202,10 +237,44 @@ export const addCamera = async (
   }
 };
 
+/**
+ * Checks the status of all cameras.
+ * @param accessToken - The access token for authorization.
+ * @returns A promise that resolves to the status of all cameras.
+ */
+export const checkAllCameraStatus = async (
+  accessToken: string
+): Promise<unknown> => {
+  try {
+    const response = await fetch("api/rest/v2.4/cameras/all/status", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to check camera addition status: ${response}`);
+    }
+    const data = await response.json();
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error("Error in allCameraStatus:", error);
+    throw error;
+  }
+};
+
+/**
+ * Checks the addition status of a specific camera.
+ * @param accessToken - The access token for authorization.
+ * @param cameraId - The ID of the camera to check.
+ * @returns A promise that resolves to the addition status of the camera.
+ */
 export const checkCameraAdditionStatus = async (
   accessToken: string,
   cameraId: number
-): Promise<CameraStatusResponse> => {
+): Promise<unknown> => {
   if (!cameraId) {
     throw new Error("Camera ID is required to check addition status");
   }
@@ -231,11 +300,17 @@ export const checkCameraAdditionStatus = async (
   return data;
 };
 
+/**
+ * Adds a camera and checks its status.
+ * @param accessToken - The access token for authorization.
+ * @param cameraId - The ID of the camera to add and check.
+ * @returns A promise that resolves to the status of the camera.
+ */
 export const addAndCheckCameraStatus = async (
   accessToken: string,
   cameraId: number
 ): Promise<unknown> => {
-  // first addCamera
+  // First adds the camera
   const addResponse = await addCamera(accessToken, cameraId);
 
   let status;
@@ -243,8 +318,9 @@ export const addAndCheckCameraStatus = async (
   const maxRetries = 10; // 10 * 18 seconds = 180 seconds (3 minutes)
   const retryDelay = 18000; // 18 seconds
 
-  console.log("addAndCheckCameraStatus :", addResponse);
+  console.log("addAndCheckCameraStatus addResponse:", addResponse);
 
+  // Retry checking the camera addition status until it succeeds or max retries are reached
   while (status === undefined && retries < maxRetries) {
     try {
       status = await checkCameraAdditionStatus(accessToken, cameraId);

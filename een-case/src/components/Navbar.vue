@@ -35,7 +35,7 @@ nav {
 }
 
 nav a {
-  font-weight: bold;
+  /* font-weight: bold; */
   color: #2c3e50;
   text-decoration: none;
   font-size: large;
